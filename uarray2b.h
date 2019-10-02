@@ -1,7 +1,19 @@
+#include <uarray2.h>
+#include <uarray.h>
+
+
 #ifndef UARRAY2B_INCLUDED
 #define UARRAY2B_INCLUDED
 
+
+struct UArray2b_T {
+	int blocksize, aux_width, width, height, size;
+	UArray2_T blockArray;
+};
+
+//typedef UArray2_T UArray2b_T;
 #define T UArray2b_T
+//typedef UArray2b_T T;
 typedef struct T *T;
 
 /*

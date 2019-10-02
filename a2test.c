@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "assert.h"
 #include "a2methods.h"
-#include "a2plain.h"
+#include <a2plain.h>
 #include "a2blocked.h"
 
 

@@ -8,10 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-
 #include "assert.h"
-
 #include "uarray2.h"
+#include "uarray.h"
 
 
 /*initialized default values*/

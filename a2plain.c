@@ -1,5 +1,4 @@
 #include <string.h>
-
 #include <a2plain.h>
 #include "uarray2.h"
 
@@ -10,12 +9,18 @@
 
 static A2Methods_UArray2 new(int width, int height, int size)
 {
+  (void) width;
+  (void) height;
+  (void) size;
   //TODO: Implement this function and remove the dummy return statement.
   return NULL;
 }
 
 static A2Methods_UArray2 new_with_blocksize(int width, int height, int size, int blocksize)
 {
+  (void) width;
+  (void) height;
+  (void) size;
   //TODO: Implement this function and remove the dummy return statement.
   (void) blocksize;
   return NULL;

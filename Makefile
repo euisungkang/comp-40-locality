@@ -70,6 +70,9 @@ timing_test: timing_test.o cputiming.o
 ppmtrans: ppmtrans.o cputiming.o the-rest-of-your-files.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
+2btest: uarray2b.o uarray2.o uarray2btest.o
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
 
 clean:
 	rm -f ppmtrans a2test timing_test *.o
