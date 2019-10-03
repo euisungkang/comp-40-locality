@@ -14,31 +14,53 @@ static A2Methods_UArray2 new(int width, int height, int size)
 
 static A2Methods_UArray2 new_with_blocksize(int width, int height, int size, int blocksize)
 {
-  (void) width;
-  (void) height;
-  (void) size;
-  //TODO: Implement this function and remove the dummy return statement.
-  (void) blocksize;
-  return NULL;
+  (void) blocksize; //element is a block of 1x1
+  return UArray2_new(width, height, size);
 }
 
-static A2Methods_UArray2 
+static void a2free(A2Methods_UArray2 * array2p)
+{
+  UArray2_free((UArray2_T *) array2p);
+}
 
+static int width(A2Methods_UArray2 array2)
+{
+  return UArray2_width(array2);
+}
 
-/* TODO: ...many more private (static) definitions follow */
+static int height(A2Methods_UArray2 array2)
+{
+  return UArray2_height(array2);
+}
+
+static int size(A2Methods_UArray2 array2)
+{
+  return UArray2_size(array2);
+}
+
+static int blocksize(A2Methods_UArray2 array2)
+{
+  (void) array2;
+  return 1; /* blocksize is 1 x 1 */
+}
+
+static A2Methods_Object *at(A2Methods_UArray2 array2, int i, int j)
+{
+  return UArray2_at(array2, i, j);
+}
 
 static void map_row_major(A2Methods_UArray2 uarray2,
-                          A2Methods_applyfun apply,
+                          A2Methods_UArray2 apply,
                           void *cl)
 {
-  UArray2_map_row_major(uarray2, (UArray2_applyfun*)apply, cl);
+  UArray2_map_row_major(uarray2, (A2Methods_applyfun *) apply, cl);
 }
 
 static void map_col_major(A2Methods_UArray2 uarray2,
-                          A2Methods_applyfun apply,
+                          A2Methods_UArray2 apply,
                           void *cl)
 {
-  UArray2_map_col_major(uarray2, (UArray2_applyfun*)apply, cl);
+  UArray2_map_col_major(uarray2, (A2Methods_UArray2 *) apply, cl);
 }
 
 struct small_closure {
@@ -57,7 +79,7 @@ static void apply_small(int i, int j, UArray2_T uarray2,
 }
 
 static void small_map_row_major(A2Methods_UArray2        a2,
-                                A2Methods_smallapplyfun  apply,
+                                void * apply,
                                 void *cl)
 {
   struct small_closure mycl = { apply, cl };
@@ -65,7 +87,7 @@ static void small_map_row_major(A2Methods_UArray2        a2,
 }
 
 static void small_map_col_major(A2Methods_UArray2        a2,
-                                A2Methods_smallapplyfun  apply,
+                                void *apply,
                                 void *cl)
 {
   struct small_closure mycl = { apply, cl };
@@ -73,14 +95,25 @@ static void small_map_col_major(A2Methods_UArray2        a2,
 }
 
 
-static struct A2Methods_T uarray2_methods_blocked_struct = {
+static struct A2Methods_T uarray2_methods_plain_struct = {
   new,
   new_with_blocksize,
-  /* ... other functions follow in order,
-   *     with NULL for those not implemented ...
-   */
+  a2free,
+  width,
+  height,
+  size,
+  blocksize,
+  at,
+  map_row_major,
+  map_col_major,
+  NULL, /* map_block_major */
+  NULL, /* map_block_major default */
+  small_map_row_major,
+  small_map_col_major,
+  NULL, /* small_map_block_major */
+  NULL, /* small_map_block_major default */
 };
 
 // finally the payoff: here is the exported pointer to the struct
 
-A2Methods_T uarray2_methods_blocked = &uarray2_methods_blocked_struct;
+A2Methods_T uarray2_methods_plain = &uarray2_methodos_plain_struct;
