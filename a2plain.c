@@ -49,18 +49,27 @@ static A2Methods_Object *at(A2Methods_UArray2 array2, int i, int j)
   return UArray2_at(array2, i, j);
 }
 
+typedef void applyfun(int i, int j, UArray2_T array2b, void *elem, void *cl);
+
 static void map_row_major(A2Methods_UArray2 uarray2,
-                          A2Methods_UArray2 apply,
+                          A2Methods_applyfun apply,
                           void *cl)
 {
-  UArray2_map_row_major(uarray2, (A2Methods_applyfun *) apply, cl);
+  UArray2_map_row_major(uarray2, (applyfun *) apply, cl);
 }
 
 static void map_col_major(A2Methods_UArray2 uarray2,
-                          A2Methods_UArray2 apply,
+                          A2Methods_applyfun apply,
                           void *cl)
 {
-  UArray2_map_col_major(uarray2, (A2Methods_UArray2 *) apply, cl);
+  UArray2_map_col_major(uarray2, (applyfun *) apply, cl);
+}
+
+static void map_default(A2Methods_UArray2 uarray2,
+                        A2Methods_applyfun apply,
+                        void *cl)
+{
+  UArray2_map_col_major(uarray2, (applyfun *) apply, cl);
 }
 
 struct small_closure {
@@ -79,7 +88,7 @@ static void apply_small(int i, int j, UArray2_T uarray2,
 }
 
 static void small_map_row_major(A2Methods_UArray2        a2,
-                                void * apply,
+                                A2Methods_smallapplyfun apply,
                                 void *cl)
 {
   struct small_closure mycl = { apply, cl };
@@ -87,13 +96,20 @@ static void small_map_row_major(A2Methods_UArray2        a2,
 }
 
 static void small_map_col_major(A2Methods_UArray2        a2,
-                                void *apply,
+                                A2Methods_smallapplyfun apply,
                                 void *cl)
 {
   struct small_closure mycl = { apply, cl };
   UArray2_map_col_major(a2, apply_small, &mycl);
 }
 
+static void small_map_default(A2Methods_UArray2        a2,
+                              A2Methods_smallapplyfun apply,
+                              void *cl)
+{
+  struct small_closure mycl = { apply, cl };
+  UArray2_map_col_major(a2, apply_small, &mycl);
+}
 
 static struct A2Methods_T uarray2_methods_plain_struct = {
   new,
@@ -107,13 +123,13 @@ static struct A2Methods_T uarray2_methods_plain_struct = {
   map_row_major,
   map_col_major,
   NULL, /* map_block_major */
-  NULL, /* map_block_major default */
+  map_default,
   small_map_row_major,
   small_map_col_major,
   NULL, /* small_map_block_major */
-  NULL, /* small_map_block_major default */
+  small_map_default
 };
 
 // finally the payoff: here is the exported pointer to the struct
 
-A2Methods_T uarray2_methods_plain = &uarray2_methodos_plain_struct;
+A2Methods_T uarray2_methods_plain = &uarray2_methods_plain_struct;
