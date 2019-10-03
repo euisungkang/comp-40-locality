@@ -12,10 +12,8 @@
 #include "uarray2.h"
 #include "uarray.h"
 
-
 /*initialized default values*/
 int HEIGHT = -1, WIDTH = -1, SIZE = -1;
-
 
 UArray2_T UArray2_new(int height, int width, int size){
 

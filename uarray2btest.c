@@ -9,8 +9,8 @@ int main()
 	int count = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			printf("i: %d, ", i);
-			printf("j: %d\n", j);
+			//printf("i: %d, ", i);
+			//printf("j: %d\n", j);
 			int *temp = UArray2b_at(array, i, j);
 			*temp = count++;
 		}
