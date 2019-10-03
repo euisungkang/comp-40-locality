@@ -9,14 +9,25 @@ int main()
 	int count = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			printf("i: %d, ", i);
-			printf("j: %d\n", j);
 			int *temp = UArray2b_at(array, i, j);
 			*temp = count++;
+
+
+			printf("temp is %d ", *temp);
+			printf("UArray2b_at is %d\n", *((int *)UArray2b_at(array, i, j)));
 		}
 	}	
 	
 
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			printf("%d  ", *((int *)UArray2b_at(array, i, j)));	
+		}
+		printf("\n");
+	}
+	
 	printf("Width: %d\n", UArray2b_width(array));
 	printf("Height: %d\n", UArray2b_height(array));
 	printf("Size: %d\n", UArray2b_size(array));
