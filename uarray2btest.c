@@ -10,6 +10,11 @@ int main()
 	int count = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
+<<<<<<< HEAD
+			//printf("i: %d, ", i);
+			//printf("j: %d\n", j);
+=======
+>>>>>>> 7d0b3380e888d452ce118b1707225e2d5a71c02d
 			int *temp = UArray2b_at(array, i, j);
 			*temp = count++;
 

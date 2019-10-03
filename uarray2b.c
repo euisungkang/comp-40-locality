@@ -20,9 +20,6 @@ T UArray2b_new (int width, int height, int size, int blocksize)
     else
         curr_aux_height = height / blocksize;
 
-
-    //printf("aux_width: %d\n", curr_aux_width);
-    //printf("aux_height: %d\n", curr_aux_height);
     T bArray = (T) malloc(sizeof(*bArray));
     bArray -> blockArray = UArray2_new(1, curr_aux_width * curr_aux_height, sizeof(UArray_T));
     bArray -> aux_width = curr_aux_width * curr_aux_height;
@@ -96,10 +93,13 @@ void *UArray2b_at(T array2b, int column, int row)
     return UArray_at(temp, (array2b -> blocksize * blockCol) + blockRow);
 }
 
-/*
 void UArray2b_map(T array2b, void apply(int col, int row, T array2b, void *elem, void *cl), void *cl)
 {
-
+    for (int i = 0; i < array2b -> aux_width; i++) {
+        for (int j = 0; j < array2b -> height; j++) {
+            apply(i, j, array2b, UArray2b_at(array2b, i, j), cl);
+        }
+    }
 }
-*/
+
 #undef T
