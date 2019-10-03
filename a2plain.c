@@ -22,6 +22,8 @@ static A2Methods_UArray2 new_with_blocksize(int width, int height, int size, int
   return NULL;
 }
 
+static A2Methods_UArray2 
+
 
 /* TODO: ...many more private (static) definitions follow */
 

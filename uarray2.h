@@ -10,7 +10,7 @@
 #define UARRAY2_INCLUDED
 
 
-#include "uarray.h"
+#include <uarray.h>
 #include <stdio.h>
 
 typedef UArray_T UArray2_T;

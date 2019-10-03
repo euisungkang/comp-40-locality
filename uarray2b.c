@@ -10,11 +10,13 @@ T UArray2b_new (int width, int height, int size, int blocksize)
 {
     int curr_aux_width = 0, curr_aux_height = 0;
 
+    /* If width is not divisible by blocksize, there has to be +1 block */
     if (width % blocksize != 0) 
         curr_aux_width = (width / blocksize) + 1;
     else
         curr_aux_width = width / blocksize;
 
+    /* If height is not divisible by blocksize, there has to be +1 block */
     if (height % blocksize != 0)
         curr_aux_height = (height / blocksize) + 1;
     else
@@ -47,11 +49,7 @@ void UArray2b_free (T *array2b)
 {
     //Free every block
     for (int i = 0; i < (*array2b) -> aux_width; i++) {
-
-        //UArray2_at(row, col)
-        //if((*array2b) -> blockArray == NULL) printf("buff\n");
         UArray_free(UArray2_at((*array2b) -> blockArray, 0, i));
-        //printf("aux_width is %d\n", (*array2b) -> aux_width);
     }
 
     //Free the array of blocks
@@ -83,23 +81,38 @@ int UArray2b_blocksize(T array2b)
 
 void *UArray2b_at(T array2b, int column, int row)
 {
-    int blockCol = column / array2b -> blocksize;
     int blockRow = row / array2b -> blocksize;
+    int blockCol = column / array2b -> blocksize;
+
+    printf("Index of temp: %d\n", (((array2b -> aux_width / 2) * blockCol) + blockRow));
 
     //Returns the block
-    UArray_T temp = UArray2_at(array2b -> blockArray, 0, blockRow);
+    UArray_T *temp = UArray2_at(array2b -> blockArray, 0, (((array2b -> aux_width / 2) * blockCol) + blockRow)) ;
 
     //Return the actual element in the block
-    return UArray_at(temp, (array2b -> blocksize * blockCol) + blockRow);
+    int aux = (array2b -> blocksize * (row % array2b -> blocksize)) + (column % array2b -> blocksize);
+
+    return UArray_at(*temp, aux);
+
 }
 
 void UArray2b_map(T array2b, void apply(int col, int row, T array2b, void *elem, void *cl), void *cl)
 {
+    UArray2_T block = array2b -> blockArray;
     for (int i = 0; i < array2b -> aux_width; i++) {
-        for (int j = 0; j < array2b -> height; j++) {
-            apply(i, j, array2b, UArray2b_at(array2b, i, j), cl);
+        //get current block
+        UArray_T *curr_block = UArray2_at(block, 0, i);
+        for (int j = 0; j < ; j++) {
+
+            void * aux = UArray_at(*curr_block, j);
+
+            if(aux == NULL)
+                continue;
+
+            apply(i, j, array2b, aux, cl);
         }
     }
 }
+
 
 #undef T
