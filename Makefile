@@ -67,7 +67,7 @@ a2test: a2test.o uarray2b.o uarray2.o a2plain.o
 timing_test: timing_test.o cputiming.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS) 
 
-ppmtrans: ppmtrans.o cputiming.o the-rest-of-your-files.o
+ppmtrans: ppmtrans.o cputiming.o uarray2b.o uarray2.o a2plain.o a2blocked.o 
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 2btest: uarray2b.o uarray2.o uarray2btest.o

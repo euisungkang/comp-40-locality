@@ -18,6 +18,7 @@
                                 argv[0]);                       \
                 exit(1);                                        \
         }                                                       \
+        printf("fun\n");                                        \
 } while (0);
 
 static void
@@ -30,12 +31,22 @@ usage(const char *progname)
 }
 
 /* Function Prototypes */
-void rotate_0(A2Methods_T, A2Methods_mapfun);
-void rotate_90(A2Methods_T, A2Methods_mapfun);
+Pnm_ppm initialize_array(A2Methods_T *, FILE *);
+//F *read_file(int, char **);
+void rotate_0(Pnm_ppm);
+void rotate_90(Pnm_ppm);
+void apply_rotation_90(int, int, A2Methods_UArray2, void *, void *);
+void print_array(int, int, A2Methods_UArray2, void *, void *);
 
 int main(int argc, char *argv[]) 
 {
-        char *time_file_name = NULL;
+        if (argc == 1) {
+            fprintf(stderr, "Usage: ./ppmtrans [-rotate 90] [-time] [filename]");
+            exit(EXIT_FAILURE);
+        } 
+
+        FILE *stream = NULL;
+
         int   rotation       = 0;
         int   i;
 
@@ -47,6 +58,8 @@ int main(int argc, char *argv[])
         A2Methods_mapfun *map = methods->map_default; 
         assert(map);
 
+        Pnm_ppm ppm_image;
+        //initialize_array(methods, stdin);
 
         for (i = 1; i < argc; i++) {
 
@@ -79,14 +92,19 @@ int main(int argc, char *argv[])
                         }
 
                         if (rotation == 0) {
-                            rotate_0(methods, map);
+                            rotate_0(ppm_image);
                         } else if (rotation == 90) {
-                            rotate_90(methods, map);
+                            rotate_90(ppm_image);
                         }
 
 
-                } else if (strcmp(argv[i], "-time") == 0) {
-                        time_file_name = argv[++i];
+                // } else if (strcmp(argv[i], "-time") == 0) {
+                //         char *time_file_name = NULL;
+                //         time_file_name = argv[++i];
+                }else if(*argv[i] != '-'){
+                    stream = fopen(argv[i], "r");
+                    //initialize the array
+                    ppm_image = initialize_array(&methods, stream);
 
                 } else if (*argv[i] == '-') {
                         fprintf(stderr, "%s: unknown option '%s'\n", argv[0],
@@ -101,18 +119,72 @@ int main(int argc, char *argv[])
                 }
         }
 
-        assert(0);              // the rest of this function is not yet implemented
+        rotate_90(ppm_image);
+        //assert(0);              // the rest of this function is not yet implemented
 }
 
-void rotate_0(A2Methods_T methods, A2Methods_mapfun *map)
+Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
 {
-    (void) methods;
+    return Pnm_ppmread(img, *methods);
+}
+
+
+void rotate_0(Pnm_ppm image)
+{
+    (void) image;
     return;
 }
 
-void rotate_90(A2Methods_T methods, A2Methods_mapfun *map)
+void rotate_90(Pnm_ppm image)
 {
-    map()
+    A2Methods_UArray2 new_array;
+
+    new_array = image -> pixels;
+
+    image -> methods -> map_row_major(new_array, apply_rotation_90, image);
+
+    int width = image->width;
+    int height = image->height;
+    //int blocksize = methods->blocksize(methods);
+
+    printf("width is %d\n", width);
+    printf("height is %d\n", height);
+
+    image -> methods -> map_row_major(new_array, print_array, &(image -> denominator));
+
+   //A2Methods_T aux_array = methods->new(width, height, size);
+}
+
+void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl) 
+{
+    (void) array2b; /* we don't use this array here  because
+    we only need the current value and it passed in as a void pointer*/
+
+    Pnm_ppm Rotated_Array = (Pnm_ppm) cl;
+
+    int h = Rotated_Array -> height;
+
+    //finding new location for the current value in the
+    //rotated image
+    int new_i = h - j - 1;
+    int new_j = i;
+
+
+    int *curr_value = (int *) value;
+
+    //finding location in the rotated array
+    int *new_location = Rotated_Array -> methods -> at(Rotated_Array -> pixels, new_j, new_i);
+
+    //setting the value
+    *new_location  = *curr_value;
+}
+
+void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
+{
+    (void) i;
+    (void) j;
+    (void) array2b;
+    printf("%d\n", (*((int *) value)) / *((int *) cl));
 }
 
 
