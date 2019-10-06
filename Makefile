@@ -73,6 +73,8 @@ ppmtrans: ppmtrans.o cputiming.o uarray2b.o uarray2.o a2plain.o a2blocked.o
 2btest: uarray2b.o uarray2.o uarray2btest.o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
+UA2test: uarray2.o uarray2test.o
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 clean:
 	rm -f ppmtrans a2test timing_test *.o

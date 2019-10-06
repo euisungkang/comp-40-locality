@@ -133,7 +133,7 @@ Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
 
 void rotate_0(Pnm_ppm image)
 {
-    image -> methods -> map_row_major(image -> pixels, print_array, image);
+    image -> methods -> map_col_major(image -> pixels, print_array, image);
 
     return;
 }
@@ -149,6 +149,9 @@ void rotate_90(Pnm_ppm image)
 
     //Initialize new array for rotated image
 
+    printf("width is %d\n", width);
+    printf("height is %d\n", height);
+
     A2Methods_UArray2 new_array = image -> methods -> new(height, width, sizeof(int));
 
     image -> pixels = new_array;
@@ -160,11 +163,7 @@ void rotate_90(Pnm_ppm image)
 
     image -> methods -> map_col_major(old_array, apply_rotation_90, image);
 
-
-    printf("width is %d\n", width);
-    printf("height is %d\n", height);
-
-    image -> methods -> map_row_major(image -> pixels, print_array, image);
+    image -> methods -> map_col_major(image -> pixels, print_array, image);
 
    //A2Methods_T aux_array = methods->new(width, height, size);
 }
@@ -209,7 +208,7 @@ void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
     (void) array2b;
     (void)value;
     printf("%d ", (*((int *) value)));
-    //printf("i is %d, Width - 1: %d\n",i, (((Pnm_ppm) cl) -> width) - 1);
+    printf("i is %d, Width - 1: %d\n",i, (((Pnm_ppm) cl) -> width) - 1);
     if ((unsigned) i == (((Pnm_ppm) cl) -> width) - 1){
         printf("\n");
     }
