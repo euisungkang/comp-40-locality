@@ -43,9 +43,7 @@ int Convert_to_one_dim_index(int col,int row){
 
         /*indices must be non-negative and not out of bounds*/
         assert(row >= 0 && col >= 0);
-        //printf("HEIGHT: %d, ROW: %d\n", HEIGHT, row);
-        //printf("WIDTH: %d, COL: %d\n", WIDTH, col);
-        assert(row < HEIGHT && col <  WIDTH);
+        assert(col <  WIDTH && row < HEIGHT);
 
         /*this formular correctly coverts a 2D indices to a correspondig
         1D index*/

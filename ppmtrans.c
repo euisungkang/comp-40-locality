@@ -133,7 +133,7 @@ Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
 
 void rotate_0(Pnm_ppm image)
 {
-    image -> methods -> map_col_major(image -> pixels, print_array, image);
+    image -> methods -> map_row_major(image -> pixels, print_array, image);
 
     return;
 }
@@ -149,23 +149,22 @@ void rotate_90(Pnm_ppm image)
 
     //Initialize new array for rotated image
 
-    printf("width is %d\n", width);
-    printf("height is %d\n", height);
+    //printf("width is %d\n", width);
+    //printf("height is %d\n", height);
 
     A2Methods_UArray2 new_array = image -> methods -> new(height, width, sizeof(int));
 
+    //printf(" Width is %d\n", );
     image -> pixels = new_array;
 
     image -> width = height;
     image -> height = width;
 
-    printf("new width is %d, new height is %d\n", image -> width, image -> height);
 
-    image -> methods -> map_col_major(old_array, apply_rotation_90, image);
+    image -> methods -> map_row_major(old_array, apply_rotation_90, image);
 
-    image -> methods -> map_col_major(image -> pixels, print_array, image);
+    //image -> methods -> map_row_major(image -> pixels, print_array, image);
 
-   //A2Methods_T aux_array = methods->new(width, height, size);
 }
 
 void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl) 
@@ -181,24 +180,22 @@ void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, voi
 
     //finding new location for the current value in the
     //rotated image
-    int new_i = h - j - 1;
-    int new_j = i;
+    //we have changed height and width values
+    int new_i = h - i - 1;
+    int new_j = j;
 
 
     int *curr_value = (int *) value;
 
     //finding location in the rotated array
-    printf("(%d, %d) -> ", i, j);
-    printf("(%d, %d)\n", new_i, new_j);
+
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
-
-    //*new_location  = *curr_value;
-
-    //printf("Value: %d -> %d\n", *new_location, *curr_value);
-
 
     //setting the value
     *new_location  = *curr_value;
+
+    //printf("(%d, %d): %d, -> (%d, %d): %d\n", i, j, *((int *)value), new_i, new_j, *new_location);
+
 }
 
 void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
@@ -208,8 +205,8 @@ void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
     (void) array2b;
     (void)value;
     printf("%d ", (*((int *) value)));
-    printf("i is %d, Width - 1: %d\n",i, (((Pnm_ppm) cl) -> width) - 1);
     if ((unsigned) i == (((Pnm_ppm) cl) -> width) - 1){
+
         printf("\n");
     }
 }
