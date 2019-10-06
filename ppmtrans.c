@@ -119,6 +119,8 @@ int main(int argc, char *argv[])
                 }
         }
 
+        rotate_0(ppm_image);
+        printf("\n");
         rotate_90(ppm_image);
         //assert(0);              // the rest of this function is not yet implemented
 }
@@ -131,26 +133,38 @@ Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
 
 void rotate_0(Pnm_ppm image)
 {
-    (void) image;
+    image -> methods -> map_row_major(image -> pixels, print_array, image);
+
     return;
 }
 
 void rotate_90(Pnm_ppm image)
 {
-    A2Methods_UArray2 new_array;
+    A2Methods_UArray2 old_array;
 
-    new_array = image -> pixels;
-
-    image -> methods -> map_row_major(new_array, apply_rotation_90, image);
+    old_array = image -> pixels;
 
     int width = image->width;
     int height = image->height;
-    //int blocksize = methods->blocksize(methods);
+
+    //Initialize new array for rotated image
+
+    A2Methods_UArray2 new_array = image -> methods -> new(height, width, sizeof(int));
+
+    image -> pixels = new_array;
+
+    image -> width = height;
+    image -> height = width;
+
+    printf("new width is %d, new height is %d\n", image -> width, image -> height);
+
+    image -> methods -> map_col_major(old_array, apply_rotation_90, image);
+
 
     printf("width is %d\n", width);
     printf("height is %d\n", height);
 
-    image -> methods -> map_row_major(new_array, print_array, &(image -> denominator));
+    image -> methods -> map_row_major(image -> pixels, print_array, image);
 
    //A2Methods_T aux_array = methods->new(width, height, size);
 }
@@ -160,9 +174,11 @@ void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, voi
     (void) array2b; /* we don't use this array here  because
     we only need the current value and it passed in as a void pointer*/
 
-    Pnm_ppm Rotated_Array = (Pnm_ppm) cl;
+    
+    Pnm_ppm ppm = (Pnm_ppm) cl;
 
-    int h = Rotated_Array -> height;
+    int h = ppm -> width;
+    
 
     //finding new location for the current value in the
     //rotated image
@@ -173,7 +189,14 @@ void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, voi
     int *curr_value = (int *) value;
 
     //finding location in the rotated array
-    int *new_location = Rotated_Array -> methods -> at(Rotated_Array -> pixels, new_j, new_i);
+    printf("(%d, %d) -> ", i, j);
+    printf("(%d, %d)\n", new_i, new_j);
+    int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+
+    //*new_location  = *curr_value;
+
+    //printf("Value: %d -> %d\n", *new_location, *curr_value);
+
 
     //setting the value
     *new_location  = *curr_value;
@@ -184,7 +207,12 @@ void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
     (void) i;
     (void) j;
     (void) array2b;
-    printf("%d\n", (*((int *) value)) / *((int *) cl));
+    (void)value;
+    printf("%d ", (*((int *) value)));
+    //printf("i is %d, Width - 1: %d\n",i, (((Pnm_ppm) cl) -> width) - 1);
+    if ((unsigned) i == (((Pnm_ppm) cl) -> width) - 1){
+        printf("\n");
+    }
 }
 
 

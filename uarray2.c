@@ -8,14 +8,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+
 #include "assert.h"
+
 #include "uarray2.h"
-#include "uarray.h"
+
 
 /*initialized default values*/
 int HEIGHT = -1, WIDTH = -1, SIZE = -1;
 
-UArray2_T UArray2_new(int height, int width, int size){
+
+UArray2_T UArray2_new(int width, int height, int size){
 
         /*all inputs shall be greater than 0*/
         assert(height > 0 && width > 0 && size > 0);
@@ -36,10 +39,12 @@ void UArray2_free(UArray2_T *uarray){
 
 /*private function to identify which cell in 1D array
 that corresponds to the [row, col] in 2D array*/
-int Convert_to_one_dim_index(int row,int col){
+int Convert_to_one_dim_index(int col,int row){
 
         /*indices must be non-negative and not out of bounds*/
         assert(row >= 0 && col >= 0);
+        //printf("HEIGHT: %d, ROW: %d\n", HEIGHT, row);
+        //printf("WIDTH: %d, COL: %d\n", WIDTH, col);
         assert(row < HEIGHT && col <  WIDTH);
 
         /*this formular correctly coverts a 2D indices to a correspondig

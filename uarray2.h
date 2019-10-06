@@ -25,7 +25,7 @@ array in order to correctly allocate enough memory.
 
 Returns: a UArray2_T to client
 */
-UArray2_T UArray2_new( int height, int width, int size);
+UArray2_T UArray2_new( int width, int height, int size);
 
 
 /* 
@@ -39,7 +39,7 @@ Returns: nothing since it’s a void function
 */
 
 void UArray2_map_row_major(UArray2_T uarray, void apply
-    (int row, int col, UArray2_T array, void *cl2,void *cl), void *cl);
+    (int col, int row, UArray2_T array, void *cl2,void *cl), void *cl);
 
 
 
@@ -52,7 +52,7 @@ pointer as a check
 Returns: nothing since it’s a void function
 */
  void UArray2_map_col_major(UArray2_T uarray, void apply
-    (int row, int col, UArray2_T array, void *cl2,void *cl), void *cl);
+    (int col, int row, UArray2_T array, void *cl2,void *cl), void *cl);
 
 
 
@@ -74,7 +74,7 @@ Parameters: UArray2_T, row index and col index
 
 Return: a void pointer to the element in [row, col]
 */
-void *UArray2_at(UArray2_T uarray, int row, int col);
+void *UArray2_at(UArray2_T uarray, int col, int row);
 
 
 /*
