@@ -84,11 +84,9 @@ int UArray2_size(UArray2_T uarray)
 void UArray2_map_row_major(UArray2_T uarray, void apply
     (int col, int row, UArray2_T uarray, void *cl2,void *cl), void *cl){
     
-        int row, col, length;
+        int row, col;
 
-        length = UArray_length((UArray_T)uarray);
-
-        for (int i = 0; i < length; ++i)
+        for (int i = 0; i < (uarray -> height) * (uarray -> width); ++i)
         {
             /*Note: (WIDTH * row) + col to identity 1D array index,
             then row is quotient of the result, and col is remainder.
