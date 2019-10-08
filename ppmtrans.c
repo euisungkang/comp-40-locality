@@ -17,8 +17,7 @@
                                 WHAT "mapping\n",               \
                                 argv[0]);                       \
                 exit(1);                                        \
-        }                                                       \
-        printf("fun\n");                                        \
+        }                                                                                              \
 } while (0);
 
 static void
@@ -35,13 +34,15 @@ Pnm_ppm initialize_array(A2Methods_T *, FILE *);
 //F *read_file(int, char **);
 void rotate_0(Pnm_ppm);
 void rotate_90(Pnm_ppm);
+void rotate_180(Pnm_ppm);
+void apply_rotation_180(int, int, A2Methods_UArray2, void *, void *);
 void apply_rotation_90(int, int, A2Methods_UArray2, void *, void *);
 void print_array(int, int, A2Methods_UArray2, void *, void *);
 
 int main(int argc, char *argv[]) 
 {
         if (argc == 1) {
-            fprintf(stderr, "Usage: ./ppmtrans [-rotate 90] [-time] [filename]");
+            fprintf(stderr, "Usage: ./ppmtrans [-rotate 90] [-time] [filename]\n");
             exit(EXIT_FAILURE);
         } 
 
@@ -121,7 +122,11 @@ int main(int argc, char *argv[])
 
         rotate_0(ppm_image);
         printf("\n");
-        rotate_90(ppm_image);
+        //rotate_90(ppm_image);
+        //printf("\n");
+        //rotate_180(ppm_image);
+        //printf("\n");
+        //rotate_180(ppm_image);
         //assert(0);              // the rest of this function is not yet implemented
 }
 
@@ -140,30 +145,24 @@ void rotate_0(Pnm_ppm image)
 
 void rotate_90(Pnm_ppm image)
 {
-    A2Methods_UArray2 old_array;
+    A2Methods_UArray2 original_image;
 
-    old_array = image -> pixels;
+    original_image = image -> pixels;
+
 
     int width = image->width;
     int height = image->height;
 
-    //Initialize new array for rotated image
-
-    //printf("width is %d\n", width);
-    //printf("height is %d\n", height);
-
-    A2Methods_UArray2 new_array = image -> methods -> new(height, width, sizeof(int));
-
-    //printf(" Width is %d\n", );
-    image -> pixels = new_array;
-
     image -> width = height;
     image -> height = width;
 
+    //Initialize new array for rotated image
+    image -> pixels = image -> methods -> new(height, width, sizeof(int));
 
-    image -> methods -> map_row_major(old_array, apply_rotation_90, image);
 
-    //image -> methods -> map_row_major(image -> pixels, print_array, image);
+    image -> methods -> map_row_major(original_image, apply_rotation_90, image);
+
+    image -> methods -> map_row_major(image -> pixels, print_array, image);
 
 }
 
@@ -171,24 +170,80 @@ void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, voi
 {
     (void) array2b; /* we don't use this array here  because
     we only need the current value and it passed in as a void pointer*/
-
     
     Pnm_ppm ppm = (Pnm_ppm) cl;
 
+    //which is same as height of original image
     int h = ppm -> width;
     
 
     //finding new location for the current value in the
     //rotated image
     //we have changed height and width values
-    int new_i = h - i - 1;
-    int new_j = j;
+    int new_i = h - j - 1;
+    int new_j = i;
+
+    int *curr_value = (int *) value;
+
+    //finding location in the rotated array
+    //printf("(%d, %d), -> (%d, %d)  : (h: %d, w: %d)\n", i, j, new_i, new_j, ppm->height, ppm -> width);
+    int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+
+    //setting the value
+    *new_location  = *curr_value;
+
+    printf("(%d, %d): %d, -> (%d, %d): %d\n", i, j, *((int *)value), new_i, new_j, *new_location);
+
+}
+
+void rotate_180(Pnm_ppm image)
+{
+    A2Methods_UArray2 original_image;
+
+    original_image = image -> pixels;
+
+    int width = image->width;
+    int height = image->height;
+
+    //Initialize new array for rotated image
+    //A2Methods_UArray2 new_array = image -> methods -> new(height, width, sizeof(int));
+
+    //printf(" Width is %d\n", );
+    image -> pixels = image -> methods -> new(width, height, sizeof(int));
+
+    //printf("width is %d, old %d \n", image-> width, width);
+    //printf("height is %d, old %d \n", image-> methods-> height(image -> pixels), height);
+
+    //image -> width = height;
+   // image -> height = width;
+
+    image -> methods -> map_row_major(original_image, apply_rotation_180, image);
+
+    image -> methods -> map_row_major(image -> pixels, print_array, image);
+}
+
+void apply_rotation_180(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
+{
+    (void) array2b; /* we don't use this array here  because
+    we only need the current value and it passed in as a void pointer*/
+
+    Pnm_ppm ppm = (Pnm_ppm) cl;
+
+    //which is same as height of original image
+    int h = ppm -> height;
+    int w = ppm -> width;
+    
+    //finding new location for the current value in the
+    //rotated image
+    //we have changed height and width values
+    int new_i = w - i - 1;
+    int new_j = h - j - 1;
 
 
     int *curr_value = (int *) value;
 
     //finding location in the rotated array
-
+    //printf("(%d, %d), -> (%d, %d)  : (h: %d, w: %d)\n", i, j, new_i, new_j, ppm->height, ppm -> width);
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
     //setting the value
@@ -206,7 +261,6 @@ void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
     (void)value;
     printf("%d ", (*((int *) value)));
     if ((unsigned) i == (((Pnm_ppm) cl) -> width) - 1){
-
         printf("\n");
     }
 }

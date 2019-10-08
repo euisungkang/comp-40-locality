@@ -14,77 +14,70 @@
 #include "uarray2.h"
 
 
-/*initialized default values*/
-int HEIGHT = -1, WIDTH = -1, SIZE = -1;
-
-
 UArray2_T UArray2_new(int width, int height, int size){
 
         /*all inputs shall be greater than 0*/
         assert(height > 0 && width > 0 && size > 0);
 
-        HEIGHT = height;
-        WIDTH = width;
-        SIZE = size;
+        UArray2_T array2 = malloc(sizeof(UArray2_T));
+        assert (array2 != NULL);
 
-        return (UArray2_T)(UArray_new(height * width, size));
+
+        array2 -> width = width;
+        array2 -> height = height;
+        array2 -> size = size;
+        array2 -> array = (UArray_T) UArray_new(height * width, size);
+
+        return array2;
 }
 
 
 /*frees the memory*/
 void UArray2_free(UArray2_T *uarray){
-        UArray_free(uarray);
+        UArray_free(&((*uarray) -> array));
+        free(*uarray);
 }
 
 
 /*private function to identify which cell in 1D array
 that corresponds to the [row, col] in 2D array*/
-int Convert_to_one_dim_index(int col,int row){
+int Convert_to_one_dim_index(UArray2_T uarray, int col,int row){
 
         /*indices must be non-negative and not out of bounds*/
         assert(row >= 0 && col >= 0);
-        assert(col <  WIDTH && row < HEIGHT);
+        assert(col <  uarray -> width && row < uarray -> height);
 
         /*this formular correctly coverts a 2D indices to a correspondig
         1D index*/
-        return (WIDTH * row) + col;
+        return (uarray -> width * row) + col;
 }
 
 void *UArray2_at(UArray2_T uarray, int col, int row){
         //transform into a single index
-        int index = Convert_to_one_dim_index(col, row);
+        int index = Convert_to_one_dim_index(uarray, col, row);
 
-        return UArray_at(uarray, index);
+        return UArray_at(uarray -> array, index);
 }
 
 
 
 
-int UArray2_width(UArray2_T uarray){
-        assert(WIDTH != -1);
-
-        int width = UArray_length((UArray_T)uarray) / HEIGHT;
-        return width;
+int UArray2_width(UArray2_T uarray)
+{
+        return uarray -> width;
 }
 
 
 
-int UArray2_height(UArray2_T uarray){
-        assert(HEIGHT != -1);
-        
-        int height = UArray_length((UArray_T)uarray) / WIDTH;
-
-        return height;
+int UArray2_height(UArray2_T uarray)
+{
+        return uarray -> height;
 }
 
 
-int UArray2_size(UArray2_T uarray){
-        assert(SIZE != -1);
-        
-        int size =  UArray_size(uarray);
-
-
-        return size;
+int UArray2_size(UArray2_T uarray)
+{
+        return uarray -> size;
 }
 
 
@@ -100,10 +93,10 @@ void UArray2_map_row_major(UArray2_T uarray, void apply
             /*Note: (WIDTH * row) + col to identity 1D array index,
             then row is quotient of the result, and col is remainder.
             So here we transform from 1D index to 2D indeces*/
-            row = (i / WIDTH);
-            col = (i % WIDTH);
-            apply(col, row, uarray, UArray_at(uarray, 
-                            Convert_to_one_dim_index(col, row)), cl);
+            row = (i / uarray -> width);
+            col = (i % uarray -> width);
+            apply(col, row, uarray, UArray_at(uarray -> array, 
+                            Convert_to_one_dim_index(uarray, col, row)), cl);
 
         }
 
@@ -114,19 +107,19 @@ void UArray2_map_col_major(UArray2_T uarray, void apply
     (int col, int row, UArray2_T uarray, void *cl2,void *cl), void *cl){
     
         int row, col;
-        for (int i = 0; i < WIDTH; ++i)
+        for (int i = 0; i < uarray -> width; ++i)
         {
             /*j increments by Width because elements of same column are Width 
             distance apart from each other*/
-            for (int j = i; j < HEIGHT * WIDTH; j += WIDTH)
+            for (int j = i; j < (uarray -> height) * (uarray -> width); j += uarray -> width)
             {
                 /*Note: (WIDTH * row) + col to identity 1D array index,
                 then row is quotient of the result, and col is remainder.
                 So here we transform from 1D index to 2D indeces*/
-                row = (j / WIDTH);
-                col = (j % WIDTH);
-                apply(col, row, uarray, UArray_at(uarray, 
-                            Convert_to_one_dim_index(col, row)), cl);
+                row = (j / uarray -> width);
+                col = (j % uarray -> width);
+                apply(col, row, uarray, UArray_at(uarray -> array, 
+                            Convert_to_one_dim_index(uarray, col, row)), cl);
             }
 
         }

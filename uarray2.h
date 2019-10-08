@@ -9,12 +9,15 @@
 #ifndef UARRAY2_INCLUDED
 #define UARRAY2_INCLUDED
 
-
 #include <uarray.h>
 #include <stdio.h>
 
-typedef UArray_T UArray2_T;
+struct UArray2_T {
+		int width, height, size;
+		UArray_T array;
+};
 
+typedef struct UArray2_T *UArray2_T;
 
 /*
 Description: creates an unboxed array of size height*width.
