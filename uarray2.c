@@ -52,6 +52,8 @@ int Convert_to_one_dim_index(UArray2_T uarray, int col,int row)
 
         /*indices must be non-negative and not out of bounds*/
         assert(row >= 0 && col >= 0);
+
+
         assert(col <  uarray -> width && row < uarray -> height);
 
         /*this formular correctly coverts a 2D indices to a correspondig
@@ -94,7 +96,6 @@ void UArray2_map_row_major(UArray2_T uarray, void apply
 {
     
         int row, col;
-
         for (int i = 0; i < (uarray -> height) * (uarray -> width); ++i){
             /*Note: (WIDTH * row) + col to identity 1D array index,
             then row is quotient of the result, and col is remainder.

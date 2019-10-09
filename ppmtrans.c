@@ -12,12 +12,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "assert.h"
 #include "a2methods.h"
 #include "a2plain.h"
 #include "a2blocked.h"
 #include "pnm.h"
+#include "cputiming.h"
 
 #define SET_METHODS(METHODS, MAP, WHAT) do {                    \
         methods = (METHODS);                                    \
@@ -43,19 +45,18 @@ usage(const char *progname)
 
 /* Function Prototypes */
 Pnm_ppm initialize_array(A2Methods_T *, FILE *);
-void rotate_0(Pnm_ppm);
-void rotate_90(Pnm_ppm);
-void rotate_180(Pnm_ppm);
-void rotate_270(Pnm_ppm);
+double rotate_0(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
+double rotate_90(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
+double rotate_180(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
+double rotate_270(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
 void apply_rotation_180(int, int, A2Methods_UArray2, void *, void *);
 void apply_rotation_90(int, int, A2Methods_UArray2, void *, void *);
-void flip_horizontal(Pnm_ppm);
-void flip_vertical(Pnm_ppm);
-void transpose(Pnm_ppm);
+double flip_horizontal(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
+double flip_vertical(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
+double transpose(Pnm_ppm, A2Methods_mapfun *, CPUTime_T );
 void apply_horizontal_flip(int, int, A2Methods_UArray2, void *, void *);
 void apply_vertical_flip(int, int, A2Methods_UArray2, void *, void *);
 void print_array_helper(Pnm_ppm);
-void print_array(int, int, A2Methods_UArray2, void *, void *);
 
 int main(int argc, char *argv[]) 
 {
@@ -66,13 +67,22 @@ int main(int argc, char *argv[])
 
         FILE *stream = NULL;
 
+        bool print_time = false;
         int   rotation       = 0;
         int   i;
 
+        char *time_file_name = NULL;
+
+        char *flip = "";
         /* default to UArray2 methods */
         A2Methods_T methods = uarray2_methods_plain; 
         assert(methods);
 
+        int which_command;
+
+        CPUTime_T timer = CPUTime_New();
+
+        //bool fiel
         /* default to best map */
         A2Methods_mapfun *map = methods->map_default; 
         assert(map);
@@ -110,20 +120,43 @@ int main(int argc, char *argv[])
                         }
 
                         if (rotation == 0) {
-                            rotate_0(ppm_image);
+                            which_command = 0;
                         } else if (rotation == 90) {
-                            rotate_90(ppm_image);
+                            which_command = 90;
+                        } else if (rotation == 180){
+                            which_command = 180;
+                        } else{
+                            which_command = 270;
                         }
 
+                } else if (strcmp(argv[i], "-time") == 0) {
+                        print_time = true;
+                        time_file_name = argv[++i];
 
-                // } else if (strcmp(argv[i], "-time") == 0) {
-                //         char *time_file_name = NULL;
-                //         time_file_name = argv[++i];
+                } else if (strcmp(argv[i], "-flip") == 0) {
+                    if (!(i + 1 < argc)) {
+                        usage(argv[0]);
+                    }
+                    flip = argv[++i];
+                    if (strcmp(flip, "horizontal") != 0 && 
+                                        strcmp(flip, "vertical") != 0) {
+                        fprintf(stderr,
+                            "Flip must be horizontal or vertical\n");
+                        usage(argv[0]);
+                    }
+
+                    if (strcmp(flip, "horizontal") == 0) {
+                        which_command = 1;
+                    } else {
+                        which_command = 2;
+                    }
+
+                } else if(strcmp(argv[i], "-transpose") == 0) {
+                    which_command = 3;
                 }else if(*argv[i] != '-'){
                     stream = fopen(argv[i], "r");
                     //initialize the array
                     ppm_image = initialize_array(&methods, stream);
-
 
                 } else if (*argv[i] == '-') {
                         fprintf(stderr, "%s: unknown option '%s'\n", argv[0],
@@ -138,24 +171,46 @@ int main(int argc, char *argv[])
                 }
         }
 
-        rotate_0(ppm_image);
-        //print_array_helper(ppm_image);
-        rotate_90(ppm_image);
-        //printf("\n");
-        //rotate_180(ppm_image);
-        //printf("\n");
-        //rotate_270(ppm_image);
-        //flip_horizontal(ppm_image);
-        //flip_vertical(ppm_image);
-        //transpose(ppm_image);
+        double cpuTime = 0;
+
+        switch(which_command){
+            case 0: cpuTime = rotate_0(ppm_image, map, timer);
+                break;
+
+            case 90: cpuTime = rotate_90(ppm_image, map, timer);
+                break;
+
+            case 180: cpuTime = rotate_180(ppm_image, map, timer);
+                break;
+
+            case 270: cpuTime = rotate_270(ppm_image, map, timer);
+                break;
+
+            case 1: cpuTime = flip_horizontal (ppm_image, map, timer);
+                break;
+
+            case 2: cpuTime = flip_vertical(ppm_image, map, timer);
+                break;
+
+            case 3: cpuTime = transpose(ppm_image, map, timer);
+                break;
+        }
+
+        if (print_time == true) {
+            FILE *time_file = fopen(time_file_name, "w");
+            assert(time_file != NULL);
+            fprintf(time_file, "Total time: %f\n", cpuTime);
+            fprintf(time_file, "Time per pixel: %f\n", (cpuTime /
+                                (ppm_image -> height * ppm_image -> width)));
+            fclose(time_file);
+        }
+
         print_array_helper(ppm_image);
 
-        //free memory
+        /*free memory*/
         Pnm_ppmfree(&ppm_image);
-
+        CPUTime_Free(&timer);
         fclose(stream);
-        //a2free(&methods);
-        //assert(0);              // the rest of this function is not yet implemented
 }
 
 Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
@@ -163,14 +218,16 @@ Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
     return Pnm_ppmread(img, *methods);
 }
 
-void rotate_0(Pnm_ppm image)
+double rotate_0(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
     /*rotate_0 doesn't do anything to the original image*/
     (void) image;
-    return;
+    (void) map;
+    CPUTime_Start(timer);
+    return CPUTime_Stop(timer);
 }
 
-void rotate_90(Pnm_ppm image)
+double rotate_90(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
     /*creating a temp image in order to hold the original image and rotated one will
     be stored in the original image ppm instance*/
@@ -190,14 +247,21 @@ void rotate_90(Pnm_ppm image)
     Note: height and width are switched */
     image -> pixels = image -> methods -> new(height, width, sizeof(int));
 
+    /*start timer*/
+    CPUTime_Start(timer);
+
     /*calling apply function in order to rotate every pixed in the image*/
-    image -> methods -> map_row_major(original_image, apply_rotation_90, image);
+    map(original_image, apply_rotation_90, image);
+
+    double time = CPUTime_Stop(timer);
 
     /*free memory taken by temp array*/
     image -> methods -> free(&original_image);
+
+    return time;
 }
 
-void rotate_180(Pnm_ppm image)
+double rotate_180(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
     /*creating a temp image in order to hold the original image and rotated one will
     be stored in the original image ppm instance*/
@@ -211,21 +275,28 @@ void rotate_180(Pnm_ppm image)
     /*Initialize new array for rotated image*/
     image -> pixels = image -> methods -> new(width, height, sizeof(int));
 
+    /*start timer*/
+    CPUTime_Start(timer);
+
     /*calling apply function in order to rotate every pixed in the image*/
-    image -> methods -> map_row_major(original_image, apply_rotation_180, image);
+    map(original_image, apply_rotation_180, image);
+
+    double time = CPUTime_Stop(timer);
 
     /*free memory taken by temp array*/
     image -> methods -> free(&original_image);
+
+
+    return time;
 }
 
-void rotate_270(Pnm_ppm image)
+double rotate_270(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
     /*270 rotation = 180 + 90*/
-    rotate_90(image);
-    rotate_180(image);
+    return rotate_90(image, map, timer) + rotate_180(image, map, timer);
 }
 
-void flip_horizontal(Pnm_ppm image)
+double flip_horizontal(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
     /*creating a temp image in order to hold the original image and rotated one will
     be stored in the original image ppm instance*/
@@ -240,14 +311,21 @@ void flip_horizontal(Pnm_ppm image)
     image -> pixels = image -> methods -> new(width, height, sizeof(int));
 
 
+    /*start timer*/
+    CPUTime_Start(timer);
+
     /*calling apply function in order to rotate every pixed in the image*/
-    image -> methods -> map_row_major(original_image, apply_horizontal_flip, image);
+    map(original_image, apply_horizontal_flip, image);
+
+    double time = CPUTime_Stop(timer);
 
     /*free memory taken by temp array*/
     image -> methods -> free(&original_image);
+
+    return time;
 }
 
-void flip_vertical(Pnm_ppm image)
+double flip_vertical(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
     /*creating a temp image in order to hold the original image and rotated one will
     be stored in the original image ppm instance*/
@@ -256,31 +334,34 @@ void flip_vertical(Pnm_ppm image)
 
     int width = image->width;
     int height = image->height;
-
     /*Initialize new array for rotated image*/
     image -> pixels = image -> methods -> new(width, height, sizeof(int));
 
+    /*start timer*/
+    CPUTime_Start(timer);
+
     /*calling apply function in order to rotate every pixed in the image*/
-    image -> methods -> map_row_major(original_image, apply_vertical_flip, image);
+    map(original_image, apply_vertical_flip, image);
+
+
+    double time = CPUTime_Stop(timer);
 
     /*free memory taken by temp array*/
     image -> methods -> free(&original_image);
+
+
+    return time;
 }
 
 
-void transpose(Pnm_ppm image)
+double transpose(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 {
-    flip_vertical(image);
-    flip_horizontal(image);
+    return flip_vertical(image, map, timer) + flip_horizontal(image, map, timer);
 }
 
 
 void print_array_helper(Pnm_ppm image)
 {
-    //image -> methods -> map_row_major(image -> pixels, print_array, image);
-    //printf("\n\n");
-
-
     /*write output on ppm file*/
     FILE *output = fopen("Rotated90.ppm", "w");
     Pnm_ppmwrite(output, image);
@@ -344,12 +425,11 @@ void apply_horizontal_flip(int i, int j, A2Methods_UArray2 array2b, void *value,
     Pnm_ppm ppm = (Pnm_ppm) cl;
 
     //which is same as height of original image
-    int h = ppm -> height;
+    int w = ppm -> width;
     
     /*finding new location for the current value in the flipped image*/
-    int new_i = h - i - 1;
+    int new_i = w - i - 1;
     int new_j = j;
-
 
     /*finding position for current element in flipped image*/
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
@@ -366,30 +446,17 @@ void apply_vertical_flip(int i, int j, A2Methods_UArray2 array2b, void *value, v
     Pnm_ppm ppm = (Pnm_ppm) cl;
 
     /*which is same as width of original image*/
-    int w = ppm -> width;
+    int h = ppm -> height;
     
     /*finding new location for the current value in the flipped image*/
     int new_i = i;
-    int new_j = w - j - 1;
-
+    int new_j = h - j - 1;
 
     /*finding position for current element in flipped image*/
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
     /*setting the value from original image to its rocaiton in flipped image*/
     *new_location  = *((int *) value);
-}
-
-void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
-{
-    (void) i;
-    (void) j;
-    (void) array2b;
-    (void) value;
-    printf("%d ", (*((int *) value)));
-    if ((unsigned) i == (((Pnm_ppm) cl) -> width) - 1){
-        printf("\n");
-    }
 }
 
 #undef SET_METHODS

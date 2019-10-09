@@ -35,6 +35,13 @@ int main()
 		}
 	}
 
+	int t = 0;
+
+	printf("%d ", ++t);
+	printf("%d ", t++);
+	printf("%d\n", t);
+
+
 	//printf("here\n");
 	//UArray2_map_row_major(new_arry, print, NULL);
 
