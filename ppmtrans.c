@@ -1,3 +1,14 @@
+/*
+    Authors: Mico Theogene Micomyiza
+             Easton Kang
+
+
+    Date: 10/9/2019
+
+    COMP40 FALL 2019
+*/
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -29,9 +40,9 @@ usage(const char *progname)
         exit(1);
 }
 
+
 /* Function Prototypes */
 Pnm_ppm initialize_array(A2Methods_T *, FILE *);
-//F *read_file(int, char **);
 void rotate_0(Pnm_ppm);
 void rotate_90(Pnm_ppm);
 void rotate_180(Pnm_ppm);
@@ -67,7 +78,6 @@ int main(int argc, char *argv[])
         assert(map);
 
         Pnm_ppm ppm_image;
-        //initialize_array(methods, stdin);
 
         for (i = 1; i < argc; i++) {
 
@@ -114,6 +124,7 @@ int main(int argc, char *argv[])
                     //initialize the array
                     ppm_image = initialize_array(&methods, stream);
 
+
                 } else if (*argv[i] == '-') {
                         fprintf(stderr, "%s: unknown option '%s'\n", argv[0],
 				argv[i]);
@@ -128,7 +139,7 @@ int main(int argc, char *argv[])
         }
 
         rotate_0(ppm_image);
-        print_array_helper(ppm_image);
+        //print_array_helper(ppm_image);
         rotate_90(ppm_image);
         //printf("\n");
         //rotate_180(ppm_image);
@@ -138,6 +149,12 @@ int main(int argc, char *argv[])
         //flip_vertical(ppm_image);
         //transpose(ppm_image);
         print_array_helper(ppm_image);
+
+        //free memory
+        Pnm_ppmfree(&ppm_image);
+
+        fclose(stream);
+        //a2free(&methods);
         //assert(0);              // the rest of this function is not yet implemented
 }
 
@@ -148,53 +165,57 @@ Pnm_ppm initialize_array(A2Methods_T *methods, FILE *img)
 
 void rotate_0(Pnm_ppm image)
 {
+    /*rotate_0 doesn't do anything to the original image*/
     (void) image;
     return;
 }
 
 void rotate_90(Pnm_ppm image)
 {
+    /*creating a temp image in order to hold the original image and rotated one will
+    be stored in the original image ppm instance*/
     A2Methods_UArray2 original_image;
-
     original_image = image -> pixels;
 
 
     int width = image->width;
     int height = image->height;
 
+    /*in case the image was a rectangle, the rotated image have dimensions
+        that are reversed compared to original image*/
     image -> width = height;
     image -> height = width;
 
-    //Initialize new array for rotated image
+    /*Initialize new array for rotated image
+    Note: height and width are switched */
     image -> pixels = image -> methods -> new(height, width, sizeof(int));
 
-
+    /*calling apply function in order to rotate every pixed in the image*/
     image -> methods -> map_row_major(original_image, apply_rotation_90, image);
-    //image -> methods -> map_row_major(image -> pixels, print_array, image);
+
+    /*free memory taken by temp array*/
+    image -> methods -> free(&original_image);
 }
 
 void rotate_180(Pnm_ppm image)
 {
+    /*creating a temp image in order to hold the original image and rotated one will
+    be stored in the original image ppm instance*/
     A2Methods_UArray2 original_image;
-
     original_image = image -> pixels;
+
 
     int width = image->width;
     int height = image->height;
 
-    //Initialize new array for rotated image
-    //A2Methods_UArray2 new_array = image -> methods -> new(height, width, sizeof(int));
-
-    //printf(" Width is %d\n", );
+    /*Initialize new array for rotated image*/
     image -> pixels = image -> methods -> new(width, height, sizeof(int));
 
-    //printf("width is %d, old %d \n", image-> width, width);
-    //printf("height is %d, old %d \n", image-> methods-> height(image -> pixels), height);
-
-    //image -> width = height;
-   // image -> height = width;
-
+    /*calling apply function in order to rotate every pixed in the image*/
     image -> methods -> map_row_major(original_image, apply_rotation_180, image);
+
+    /*free memory taken by temp array*/
+    image -> methods -> free(&original_image);
 }
 
 void rotate_270(Pnm_ppm image)
@@ -206,6 +227,8 @@ void rotate_270(Pnm_ppm image)
 
 void flip_horizontal(Pnm_ppm image)
 {
+    /*creating a temp image in order to hold the original image and rotated one will
+    be stored in the original image ppm instance*/
     A2Methods_UArray2 original_image;
 
     original_image = image -> pixels;
@@ -213,26 +236,37 @@ void flip_horizontal(Pnm_ppm image)
     int width = image->width;
     int height = image->height;
 
-    //Initialize new array for rotated image
+    /*Initialize new array for rotated image*/
     image -> pixels = image -> methods -> new(width, height, sizeof(int));
 
+
+    /*calling apply function in order to rotate every pixed in the image*/
     image -> methods -> map_row_major(original_image, apply_horizontal_flip, image);
+
+    /*free memory taken by temp array*/
+    image -> methods -> free(&original_image);
 }
 
 void flip_vertical(Pnm_ppm image)
 {
+    /*creating a temp image in order to hold the original image and rotated one will
+    be stored in the original image ppm instance*/
     A2Methods_UArray2 original_image;
-
     original_image = image -> pixels;
 
     int width = image->width;
     int height = image->height;
 
-    //Initialize new array for rotated image
+    /*Initialize new array for rotated image*/
     image -> pixels = image -> methods -> new(width, height, sizeof(int));
 
+    /*calling apply function in order to rotate every pixed in the image*/
     image -> methods -> map_row_major(original_image, apply_vertical_flip, image);
+
+    /*free memory taken by temp array*/
+    image -> methods -> free(&original_image);
 }
+
 
 void transpose(Pnm_ppm image)
 {
@@ -240,12 +274,15 @@ void transpose(Pnm_ppm image)
     flip_horizontal(image);
 }
 
+
 void print_array_helper(Pnm_ppm image)
 {
-    image -> methods -> map_row_major(image -> pixels, print_array, image);
-    printf("\n\n");
+    //image -> methods -> map_row_major(image -> pixels, print_array, image);
+    //printf("\n\n");
 
-    FILE *output = fopen("Rotated.ppm", "w");
+
+    /*write output on ppm file*/
+    FILE *output = fopen("Rotated90.ppm", "w");
     Pnm_ppmwrite(output, image);
 
     fclose(output);
@@ -258,23 +295,21 @@ void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, voi
     
     Pnm_ppm ppm = (Pnm_ppm) cl;
 
-    //which is same as height of original image
+    /*Note: height and width of original image were swapped in the rotated image
+        Thus, h of original image is same as width of rotated image*/
     int h = ppm -> width;
     
 
-    //finding new location for the current value in the
-    //rotated image
-    //we have changed height and width values
+    /*finding new location for the current value in the rotated image*/
     int new_i = h - j - 1;
     int new_j = i;
 
-    int *curr_value = (int *) value;
 
-    //finding location in the rotated array
+    /*finding position for current element in rotated image*/
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
-    //setting the value
-    *new_location  = *curr_value;
+    /*setting the value from original image to its rocaiton in rotated image*/
+    *new_location  = *((int *) value);
 }
 
 
@@ -285,23 +320,20 @@ void apply_rotation_180(int i, int j, A2Methods_UArray2 array2b, void *value, vo
 
     Pnm_ppm ppm = (Pnm_ppm) cl;
 
-    //which is same as height of original image
+
     int h = ppm -> height;
     int w = ppm -> width;
     
-    //finding new location for the current value in the
-    //rotated image
-    //we have changed height and width values
+    /*finding new location for the current value in the rotated image*/
     int new_i = w - i - 1;
     int new_j = h - j - 1;
 
-    int *curr_value = (int *) value;
 
-    //finding location in the rotated array
+    /*finding position for current element in rotated image*/
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
-    //setting the value
-    *new_location  = *curr_value;
+    /*setting the value from original image to its rocaiton in rotated image*/
+    *new_location  = *((int *) value);
 }
 
 void apply_horizontal_flip(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
@@ -314,18 +346,16 @@ void apply_horizontal_flip(int i, int j, A2Methods_UArray2 array2b, void *value,
     //which is same as height of original image
     int h = ppm -> height;
     
-    //finding new location for the current value in the rotated image
-    //we have changed height and width values
+    /*finding new location for the current value in the flipped image*/
     int new_i = h - i - 1;
     int new_j = j;
 
-    int *curr_value = (int *) value;
 
-    //finding location in the rotated array
+    /*finding position for current element in flipped image*/
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
-    //setting the value
-    *new_location  = *curr_value;
+    /*setting the value from original image to its rocaiton in flipped image*/
+    *new_location  = *((int *) value);
 }
 
 void apply_vertical_flip(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
@@ -335,21 +365,19 @@ void apply_vertical_flip(int i, int j, A2Methods_UArray2 array2b, void *value, v
 
     Pnm_ppm ppm = (Pnm_ppm) cl;
 
-    //which is same as width of original image
+    /*which is same as width of original image*/
     int w = ppm -> width;
     
-    //finding new location for the current value in the rotated image
-    //we have changed height and width values
+    /*finding new location for the current value in the flipped image*/
     int new_i = i;
     int new_j = w - j - 1;
 
-    int *curr_value = (int *) value;
 
-    //finding location in the rotated array
+    /*finding position for current element in flipped image*/
     int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
-    //setting the value
-    *new_location  = *curr_value;
+    /*setting the value from original image to its rocaiton in flipped image*/
+    *new_location  = *((int *) value);
 }
 
 void print_array(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)

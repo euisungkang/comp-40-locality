@@ -1,3 +1,14 @@
+/*
+    Authors: Mico Theogene Micomyiza
+             Easton Kang
+
+
+    Date: 10/4/2019
+    
+    COMP40 FALL 2019
+*/
+
+
 #include <string.h>
 #include <a2plain.h>
 #include "uarray2.h"
