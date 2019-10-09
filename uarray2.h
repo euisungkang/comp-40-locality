@@ -1,4 +1,3 @@
-
 /*
     Authors: Mico Theogene Micomyiza
              Yves Chen

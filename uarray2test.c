@@ -40,7 +40,7 @@ int main()
 
 	printf("col major\n");
 	UArray2_map_col_major(new_arry, print, NULL);
-	UArray2_free(&new_arry);
+
 	
 	return 0;
 }
