@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include "uarray2b.h"
 
@@ -10,13 +11,13 @@ T UArray2b_new (int width, int height, int size, int blocksize)
 {
     int curr_aux_width = 0, curr_aux_height = 0;
 
-    /* If width is not divisible by blocksize, there has to be +1 block*/
+    /* If width is not divisible by blocksize, there has to be +1 block */
     if (width % blocksize != 0) 
         curr_aux_width = (width / blocksize) + 1;
     else
         curr_aux_width = width / blocksize;
 
-    /* If height is not divisible by blocksize, there has to be +1 block*/
+    /* If height is not divisible by blocksize, there has to be +1 block */
     if (height % blocksize != 0)
         curr_aux_height = (height / blocksize) + 1;
     else
@@ -33,10 +34,8 @@ T UArray2b_new (int width, int height, int size, int blocksize)
     bArray -> size = size;
 
     for (int i = 0; i < bArray->aux_width; i++) {
-        //UArray2_at(row, col)
-        printf("blocksize 2 is %d\n", blocksize * blocksize);
-        UArray_T *temp = UArray2_at(bArray -> blockArray, 0, i);
-        *temp = (UArray_T) UArray_new(blocksize * blocksize, size);
+        UArray_T *temp  = UArray2_at(bArray -> blockArray, 0, i);
+        *temp  = (UArray_T) UArray_new(blocksize * blocksize, size);
     }
 
     return bArray;
@@ -44,22 +43,19 @@ T UArray2b_new (int width, int height, int size, int blocksize)
 
 T UArray2b_new_64K_block(int width, int height, int size)
 {
-    //blocksize is 256 = sqrt(65,536)
+    /* blocksize is 256 = sqrt(65,536) */
     return UArray2b_new(width, height, size, DEFAULT_BLOCK_SIZE);
 }
 
 void UArray2b_free (T *array2b)
 {
-    //Free every block
-    printf("free\n");
+    /* Free every block */
     for (int i = 0; i < (*array2b) -> aux_width; i++) {
         UArray_free(UArray2_at((*array2b) -> blockArray, 0, i));
     }
 
-    //Free the array of blocks
+    /* Free the array of blocks */
     UArray2_free(&(*array2b) -> blockArray);
-
-    //Free the array of arrays
     free(*array2b);
 }
 
@@ -88,41 +84,38 @@ void *UArray2b_at(T array2b, int column, int row)
     int blockRow = row / array2b -> blocksize;
     int blockCol = column / array2b -> blocksize;
 
-    //Returns the block
+    /* Returns the block */
 
-
-    printf("Col: %d, Row: %d        ", column, row);
-    printf("Width: %d, Height: %d\n", array2b -> width, array2b -> height);
     UArray_T *temp = UArray2_at(array2b -> blockArray, 0,
              (((array2b -> aux_width) * blockRow) + blockCol)) ;
 
-    //Return the actual element in the block
-    int aux = (array2b -> blocksize * (row % array2b -> blocksize)) +
+    /* Return the actual element in the block */
+    int aux = (array2b -> width * (row % array2b -> blocksize)) +
                                          (column % array2b -> blocksize);
 
     return UArray_at(*temp, aux);
-
 }
 
 void UArray2b_map(T array2b, void apply(int col, int row, T array2b, 
                                     void *elem, void *cl), void *cl)
 {
     UArray2_T block = array2b -> blockArray;
+
+    if (array2b -> width % array2b -> blocksize != 0) {
+        width_exceed = true;
+    }
+    if (array2b -> height % array2b -> blocksize != 0) {
+        height_exceed = true;
+    }
+
     for (int i = 0; i < array2b -> aux_width; i++) {
-        //get current block
         UArray_T *curr_block = UArray2_at(block, 0, i);
-        printf("This is length of block: %d\n", UArray_length(*curr_block)); 
-        for (int j = 0; j < UArray_length(*curr_block); j++) {
-
-            void * aux = UArray_at(*curr_block, j);
-            printf("%d ", j);
-
-            if(aux == NULL)
-                continue;
-
-            apply(i, j, array2b, aux, cl);
+        for (int x = 0; x < array2b -> width; x++) {
+            for (int y = 0; y < array2b -> height; y++) {
+                void *aux = UArray_at(*curr_block, array2b -> width * x + y);
+                apply(x, y, array2b, aux, cl);
+            }
         }
-        printf("\n");
     }
 }
 

@@ -26,10 +26,12 @@ static int width(A2 array2)
 {
 	return UArray2b_width(array2);
 }
+
 static int height(A2 array2)
 {
 	return UArray2b_height(array2);
 }
+
 static int size(A2 array2)
 {
 	return UArray2b_size(array2);

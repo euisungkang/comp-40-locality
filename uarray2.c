@@ -24,13 +24,15 @@ UArray2_T UArray2_new(int width, int height, int size)
         /*all inputs shall be greater than 0*/
         assert(height > 0 && width > 0 && size > 0);
 
-        UArray2_T array2 = malloc(sizeof(UArray2_T));
+        UArray2_T array2 = calloc(height * width, sizeof(UArray2_T));
         assert (array2 != NULL);
 
         /*initializing the struct*/
         array2 -> width = width;
         array2 -> height = height;
+        //printf("Actual Size: %d\n", size);
         array2 -> size = size;
+        //printf("Debug Size: %d\n", array2 -> size);
         array2 -> array = (UArray_T) UArray_new(height * width, size);
 
         return array2;

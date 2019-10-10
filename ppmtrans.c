@@ -13,7 +13,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
 #include "assert.h"
 #include "a2methods.h"
 #include "a2plain.h"
@@ -72,6 +71,7 @@ int main(int argc, char *argv[])
         int   i;
 
         char *time_file_name = NULL;
+        bool file_name_given = false;
 
         char *flip = "";
         /* default to UArray2 methods */
@@ -154,10 +154,12 @@ int main(int argc, char *argv[])
                 } else if(strcmp(argv[i], "-transpose") == 0) {
                     which_command = 3;
                 }else if(*argv[i] != '-'){
+                    file_name_given = true;
                     stream = fopen(argv[i], "r");
-                    //initialize the array
-                    ppm_image = initialize_array(&methods, stream);
 
+                    /* initialize the array */
+                    ppm_image = initialize_array(&methods, stream);
+                    printf("After init\n");
                 } else if (*argv[i] == '-') {
                         fprintf(stderr, "%s: unknown option '%s'\n", argv[0],
 				argv[i]);
@@ -169,6 +171,12 @@ int main(int argc, char *argv[])
                 } else {
                         break;
                 }
+        }
+
+        if (file_name_given == false) {
+            stream = stdin;
+            assert (stream != NULL);
+            ppm_IMAGE = initialize_array(&methods, stream);
         }
 
         double cpuTime = 0;
@@ -234,7 +242,6 @@ double rotate_90(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
     A2Methods_UArray2 original_image;
     original_image = image -> pixels;
 
-
     int width = image->width;
     int height = image->height;
 
@@ -245,7 +252,8 @@ double rotate_90(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 
     /*Initialize new array for rotated image
     Note: height and width are switched */
-    image -> pixels = image -> methods -> new(height, width, sizeof(int));
+    //printf("Size: %ld\n", sizeof(Pnm_rgb));
+    image -> pixels = image -> methods -> new(height, width, 2 * sizeof(Pnm_rgb));
 
     /*start timer*/
     CPUTime_Start(timer);
@@ -273,7 +281,7 @@ double rotate_180(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
     int height = image->height;
 
     /*Initialize new array for rotated image*/
-    image -> pixels = image -> methods -> new(width, height, sizeof(int));
+    image -> pixels = image -> methods -> new(width, height, 2 * sizeof(Pnm_rgb));
 
     /*start timer*/
     CPUTime_Start(timer);
@@ -285,7 +293,6 @@ double rotate_180(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 
     /*free memory taken by temp array*/
     image -> methods -> free(&original_image);
-
 
     return time;
 }
@@ -308,7 +315,7 @@ double flip_horizontal(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
     int height = image->height;
 
     /*Initialize new array for rotated image*/
-    image -> pixels = image -> methods -> new(width, height, sizeof(int));
+    image -> pixels = image -> methods -> new(width, height, 2 * sizeof(Pnm_rgb));
 
 
     /*start timer*/
@@ -335,7 +342,7 @@ double flip_vertical(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
     int width = image->width;
     int height = image->height;
     /*Initialize new array for rotated image*/
-    image -> pixels = image -> methods -> new(width, height, sizeof(int));
+    image -> pixels = image -> methods -> new(width, height, 2 * sizeof(Pnm_rgb));
 
     /*start timer*/
     CPUTime_Start(timer);
@@ -343,12 +350,10 @@ double flip_vertical(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
     /*calling apply function in order to rotate every pixed in the image*/
     map(original_image, apply_vertical_flip, image);
 
-
     double time = CPUTime_Stop(timer);
 
     /*free memory taken by temp array*/
     image -> methods -> free(&original_image);
-
 
     return time;
 }
@@ -363,14 +368,12 @@ double transpose(Pnm_ppm image, A2Methods_mapfun *map, CPUTime_T timer)
 void print_array_helper(Pnm_ppm image)
 {
     /*write output on ppm file*/
-    FILE *output = fopen("Rotated90.ppm", "w");
-    Pnm_ppmwrite(output, image);
-
-    fclose(output);
+    Pnm_ppmwrite(stdout, image);
 }
 
 void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl) 
 {
+
     (void) array2b; /* we don't use this array here  because
     we only need the current value and it passed in as a void pointer*/
     
@@ -387,10 +390,12 @@ void apply_rotation_90(int i, int j, A2Methods_UArray2 array2b, void *value, voi
 
 
     /*finding position for current element in rotated image*/
-    int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+    Pnm_rgb new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+
 
     /*setting the value from original image to its rocaiton in rotated image*/
-    *new_location  = *((int *) value);
+    *new_location = *((Pnm_rgb) value);
+    printf("Value after: %d\n", *((int *)new_location));
 }
 
 
@@ -411,10 +416,10 @@ void apply_rotation_180(int i, int j, A2Methods_UArray2 array2b, void *value, vo
 
 
     /*finding position for current element in rotated image*/
-    int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+    Pnm_rgb new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
     /*setting the value from original image to its rocaiton in rotated image*/
-    *new_location  = *((int *) value);
+    *new_location  = *((Pnm_rgb ) value);
 }
 
 void apply_horizontal_flip(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
@@ -432,10 +437,10 @@ void apply_horizontal_flip(int i, int j, A2Methods_UArray2 array2b, void *value,
     int new_j = j;
 
     /*finding position for current element in flipped image*/
-    int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+    Pnm_rgb new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
     /*setting the value from original image to its rocaiton in flipped image*/
-    *new_location  = *((int *) value);
+    *new_location  = *((Pnm_rgb) value);
 }
 
 void apply_vertical_flip(int i, int j, A2Methods_UArray2 array2b, void *value, void *cl)
@@ -453,10 +458,10 @@ void apply_vertical_flip(int i, int j, A2Methods_UArray2 array2b, void *value, v
     int new_j = h - j - 1;
 
     /*finding position for current element in flipped image*/
-    int *new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
+    Pnm_rgb new_location = ppm -> methods -> at(ppm -> pixels, new_i, new_j);
 
     /*setting the value from original image to its rocaiton in flipped image*/
-    *new_location  = *((int *) value);
+    *new_location  = *((Pnm_rgb) value);
 }
 
 #undef SET_METHODS
